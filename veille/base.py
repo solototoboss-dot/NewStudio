@@ -1,5 +1,6 @@
 # Base de données SQLite : range les news et évite les doublons.
 
+import json  # pour ranger la liste des preuves
 import sqlite3  # SQLite est inclus dans Python, rien à installer
 from datetime import datetime, timedelta, timezone  # pour les dates
 from pathlib import Path  # pour trouver les fichiers du projet
@@ -34,6 +35,18 @@ def creer_base():
     # Si la base a été créée avant l'ajout des notes, on ajoute les colonnes manquantes
     ajouter_colonne(connexion, "score", "INTEGER")
     ajouter_colonne(connexion, "raison", "TEXT")
+
+    # Table des vérifications : le verdict de l'agent vérificateur pour chaque news du top
+    connexion.execute("""
+        CREATE TABLE IF NOT EXISTS verifications (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            news_id      INTEGER NOT NULL,  -- le numéro de la news vérifiée
+            verdict      TEXT NOT NULL,     -- confirmee, incertaine ou fausse
+            preuves      TEXT,              -- les liens des sources, au format JSON
+            explication  TEXT,
+            verifiee_le  TEXT
+        )
+    """)
     connexion.commit()
     connexion.close()
 
@@ -139,3 +152,34 @@ def selectionner_top(nombre=3, minimum=7):
     connexion.commit()
     connexion.close()
     return top
+
+
+def news_selectionnees():
+    """Renvoie les news du top qui attendent encore leur vérification."""
+    connexion = connecter()
+    lignes = connexion.execute(
+        "SELECT id, source, titre, lien FROM news WHERE statut = 'selectionnee' "
+        "ORDER BY score DESC"
+    ).fetchall()
+    connexion.close()
+    return lignes
+
+
+# Le statut que prend une news selon le verdict du vérificateur
+STATUT_SELON_VERDICT = {"confirmee": "verifiee", "incertaine": "incertaine", "fausse": "rejetee"}
+
+
+def enregistrer_verification(news_id, verdict, preuves, explication):
+    """Range le verdict du vérificateur et met à jour le statut de la news."""
+    connexion = connecter()
+    connexion.execute(
+        "INSERT INTO verifications (news_id, verdict, preuves, explication, verifiee_le) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (news_id, verdict, json.dumps(preuves), explication, maintenant()),
+    )
+    connexion.execute(
+        "UPDATE news SET statut = ? WHERE id = ?",
+        (STATUT_SELON_VERDICT[verdict], news_id),
+    )
+    connexion.commit()
+    connexion.close()

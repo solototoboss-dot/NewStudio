@@ -6,7 +6,9 @@ from pathlib import Path  # pour trouver les fichiers du projet
 
 import base  # notre fichier base.py, dans le même dossier
 
-FICHIER_SCORES = Path(__file__).parent.parent / "data" / "scores.json"
+DOSSIER_DATA = Path(__file__).parent.parent / "data"
+FICHIER_SCORES = DOSSIER_DATA / "scores.json"
+FICHIER_A_VERIFIER = DOSSIER_DATA / "a_verifier.json"
 
 # Affiche correctement les accents, même quand Claude Code lit le résultat
 sys.stdout.reconfigure(encoding="utf-8")
@@ -40,6 +42,15 @@ def main():
         print(f"{rang}. [{score}/10] {titre} ({source})")
         print(f"   {raison}")
         print(f"   {lien}")
+
+    # Prépare la liste des news du top à faire vérifier
+    a_verifier = [
+        {"id": identifiant, "source": source, "titre": titre, "lien": lien}
+        for identifiant, source, titre, lien in base.news_selectionnees()
+    ]
+    with open(FICHIER_A_VERIFIER, "w", encoding="utf-8") as fichier:
+        json.dump(a_verifier, fichier, ensure_ascii=False, indent=2)
+    print(f"\n{len(a_verifier)} news à vérifier, écrites dans data/a_verifier.json")
 
 
 # Ce bloc lance main() seulement quand on exécute ce fichier directement
