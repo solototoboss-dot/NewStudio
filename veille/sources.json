@@ -1,0 +1,69 @@
+{
+  "sources": [
+    {
+      "nom": "OpenAI",
+      "type": "officielle",
+      "langue": "en",
+      "flux": "https://openai.com/news/rss.xml"
+    },
+    {
+      "nom": "Google DeepMind",
+      "type": "officielle",
+      "langue": "en",
+      "flux": "https://deepmind.google/blog/rss.xml"
+    },
+    {
+      "nom": "Google AI",
+      "type": "officielle",
+      "langue": "en",
+      "flux": "https://blog.google/technology/ai/rss/"
+    },
+    {
+      "nom": "Mistral AI",
+      "type": "officielle",
+      "langue": "en",
+      "flux": "https://mistral.ai/rss.xml"
+    },
+    {
+      "nom": "Hugging Face",
+      "type": "officielle",
+      "langue": "en",
+      "flux": "https://huggingface.co/blog/feed.xml"
+    },
+    {
+      "nom": "NVIDIA",
+      "type": "officielle",
+      "langue": "en",
+      "flux": "https://blogs.nvidia.com/feed/"
+    },
+    {
+      "nom": "TechCrunch IA",
+      "type": "media",
+      "langue": "en",
+      "flux": "https://techcrunch.com/category/artificial-intelligence/feed/"
+    },
+    {
+      "nom": "ActuIA",
+      "type": "media",
+      "langue": "fr",
+      "flux": "https://www.actuia.com/feed/"
+    }
+  ],
+  "sans_flux": [
+    {
+      "nom": "Anthropic",
+      "site": "https://www.anthropic.com/news"
+    },
+    {
+      "nom": "Meta AI",
+      "site": "https://ai.meta.com/blog/"
+    }
+  ],
+  "recherches_web": [
+    "nouveau modèle d'intelligence artificielle annoncé",
+    "AI model release announcement",
+    "Anthropic Claude announcement",
+    "Meta AI Llama announcement",
+    "open source AI model released"
+  ]
+}
