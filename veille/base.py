@@ -26,11 +26,23 @@ def creer_base():
             date         TEXT,                  -- date de publication
             resume       TEXT,
             statut       TEXT DEFAULT 'nouvelle',
-            collectee_le TEXT                   -- quand le studio l'a récupérée
+            collectee_le TEXT,                  -- quand le studio l'a récupérée
+            score        INTEGER,               -- note de Claude, de 0 à 10
+            raison       TEXT                   -- pourquoi cette note
         )
     """)
+    # Si la base a été créée avant l'ajout des notes, on ajoute les colonnes manquantes
+    ajouter_colonne(connexion, "score", "INTEGER")
+    ajouter_colonne(connexion, "raison", "TEXT")
     connexion.commit()
     connexion.close()
+
+
+def ajouter_colonne(connexion, nom, type_sql):
+    """Ajoute une colonne à la table news si elle n'existe pas encore."""
+    colonnes = [ligne[1] for ligne in connexion.execute("PRAGMA table_info(news)")]
+    if nom not in colonnes:
+        connexion.execute(f"ALTER TABLE news ADD COLUMN {nom} {type_sql}")
 
 
 def maintenant():
@@ -84,3 +96,46 @@ def compter_par_source():
     ).fetchall()
     connexion.close()
     return lignes
+
+
+def news_a_noter():
+    """Renvoie les news des dernières 24 heures que Claude n'a pas encore notées."""
+    connexion = connecter()
+    lignes = connexion.execute(
+        "SELECT id, source, titre, resume FROM news "
+        "WHERE statut = 'nouvelle' AND COALESCE(date, collectee_le) >= ? "
+        "ORDER BY COALESCE(date, collectee_le) DESC",
+        (depuis_24h(),),
+    ).fetchall()
+    connexion.close()
+    return lignes
+
+
+def enregistrer_scores(notes):
+    """Range la note et la raison de chaque news, puis la marque comme notée."""
+    connexion = connecter()
+    for note in notes:
+        connexion.execute(
+            "UPDATE news SET score = ?, raison = ?, statut = 'notee' WHERE id = ?",
+            (note["score"], note["raison"], note["id"]),
+        )
+    connexion.commit()
+    connexion.close()
+
+
+def selectionner_top(nombre=3, minimum=7):
+    """Garde les meilleures news notées (au moins `minimum`/10) et écarte les autres."""
+    connexion = connecter()
+    top = connexion.execute(
+        "SELECT id, source, titre, score, raison, lien FROM news "
+        "WHERE statut = 'notee' AND score >= ? "
+        "ORDER BY score DESC, COALESCE(date, collectee_le) DESC LIMIT ?",
+        (minimum, nombre),
+    ).fetchall()
+    for ligne in top:
+        connexion.execute("UPDATE news SET statut = 'selectionnee' WHERE id = ?", (ligne[0],))
+    # Toutes les autres news notées sont écartées
+    connexion.execute("UPDATE news SET statut = 'ecartee' WHERE statut = 'notee'")
+    connexion.commit()
+    connexion.close()
+    return top
