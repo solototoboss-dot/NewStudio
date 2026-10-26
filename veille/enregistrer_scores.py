@@ -9,6 +9,7 @@ import base  # notre fichier base.py, dans le même dossier
 DOSSIER_DATA = Path(__file__).parent.parent / "data"
 FICHIER_SCORES = DOSSIER_DATA / "scores.json"
 FICHIER_A_VERIFIER = DOSSIER_DATA / "a_verifier.json"
+FICHIER_SOURCES = Path(__file__).parent / "sources.json"
 
 # Affiche correctement les accents, même quand Claude Code lit le résultat
 sys.stdout.reconfigure(encoding="utf-8")
@@ -22,6 +23,13 @@ def note_valide(note):
         and 0 <= note["score"] <= 10
         and isinstance(note.get("raison"), str)
     )
+
+
+def infos_sources():
+    """Renvoie, pour chaque nom de source, son type (officielle ou media) et son flux RSS."""
+    with open(FICHIER_SOURCES, encoding="utf-8") as fichier:
+        sources = json.load(fichier)["sources"]
+    return {source["nom"]: source for source in sources}
 
 
 def main():
@@ -44,10 +52,15 @@ def main():
         print(f"   {lien}")
 
     # Prépare la liste des news du top à faire vérifier
-    a_verifier = [
-        {"id": identifiant, "source": source, "titre": titre, "lien": lien}
-        for identifiant, source, titre, lien in base.news_selectionnees()
-    ]
+    # Le type et le flux aident le vérificateur à retrouver la publication officielle
+    sources = infos_sources()
+    a_verifier = []
+    for identifiant, source, titre, lien in base.news_selectionnees():
+        infos = sources.get(source, {})
+        a_verifier.append({
+            "id": identifiant, "source": source, "titre": titre, "lien": lien,
+            "type": infos.get("type", "inconnu"), "flux": infos.get("flux"),
+        })
     with open(FICHIER_A_VERIFIER, "w", encoding="utf-8") as fichier:
         json.dump(a_verifier, fichier, ensure_ascii=False, indent=2)
     print(f"\n{len(a_verifier)} news à vérifier, écrites dans data/a_verifier.json")
