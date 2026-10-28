@@ -47,6 +47,21 @@ def creer_base():
             verifiee_le  TEXT
         )
     """)
+
+    # Table des scripts : les textes de 45 à 60 secondes écrits pour chaque news confirmée
+    connexion.execute("""
+        CREATE TABLE IF NOT EXISTS scripts (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            news_id    INTEGER NOT NULL,  -- le numéro de la news racontée
+            numero     INTEGER NOT NULL,  -- 1, 2 ou 3 : la version du script
+            angle      TEXT,              -- l'idée principale de cette version
+            style      TEXT NOT NULL,     -- le style de montage : dynamique ou explicatif
+            texte      TEXT NOT NULL,     -- ce que la voix va lire
+            images     TEXT,              -- les idées d'images, au format JSON
+            mots       INTEGER,           -- nombre de mots du texte
+            ecrit_le   TEXT
+        )
+    """)
     connexion.commit()
     connexion.close()
 
@@ -181,5 +196,37 @@ def enregistrer_verification(news_id, verdict, preuves, explication):
         "UPDATE news SET statut = ? WHERE id = ?",
         (STATUT_SELON_VERDICT[verdict], news_id),
     )
+    connexion.commit()
+    connexion.close()
+
+
+def news_a_scripter():
+    """Renvoie les news confirmées qui n'ont pas encore de scripts, avec leur dernière vérification."""
+    connexion = connecter()
+    lignes = connexion.execute(
+        "SELECT news.id, news.source, news.titre, news.resume, news.lien, "
+        "verifications.explication, verifications.preuves "
+        "FROM news JOIN verifications ON verifications.news_id = news.id "
+        "WHERE news.statut = 'verifiee' "
+        # On garde seulement la vérification la plus récente de chaque news
+        "AND verifications.id = (SELECT MAX(id) FROM verifications WHERE news_id = news.id) "
+        "ORDER BY news.score DESC"
+    ).fetchall()
+    connexion.close()
+    return lignes
+
+
+def enregistrer_scripts(scripts):
+    """Range les scripts d'une liste et marque leurs news comme scriptées."""
+    connexion = connecter()
+    for script in scripts:
+        connexion.execute(
+            "INSERT INTO scripts (news_id, numero, angle, style, texte, images, mots, ecrit_le) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (script["news_id"], script["numero"], script["angle"], script["style"],
+             script["texte"], json.dumps(script["images"], ensure_ascii=False),
+             len(script["texte"].split()), maintenant()),
+        )
+        connexion.execute("UPDATE news SET statut = 'scriptee' WHERE id = ?", (script["news_id"],))
     connexion.commit()
     connexion.close()
