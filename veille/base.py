@@ -63,13 +63,15 @@ def creer_base():
             ecrit_le   TEXT,
             audio      TEXT,              -- chemin du fichier MP3 de la voix
             duree      REAL,              -- vraie durée de la voix, en secondes
-            voix       TEXT               -- le moteur et la voix utilisés, ex. elevenlabs:Nicolas
+            voix       TEXT,              -- le moteur et la voix utilisés, ex. elevenlabs:Nicolas
+            sous_titres TEXT              -- chemin du fichier de sous-titres .ass
         )
     """)
     # Si la table scripts a été créée avant l'ajout de la voix, on ajoute les colonnes manquantes
     ajouter_colonne(connexion, "audio", "TEXT", table="scripts")
     ajouter_colonne(connexion, "duree", "REAL", table="scripts")
     ajouter_colonne(connexion, "voix", "TEXT", table="scripts")
+    ajouter_colonne(connexion, "sous_titres", "TEXT", table="scripts")
     connexion.commit()
     connexion.close()
 
@@ -262,5 +264,24 @@ def enregistrer_voix(script_id, audio, duree, voix):
         "UPDATE scripts SET audio = ?, duree = ?, voix = ? WHERE id = ?",
         (audio, duree, voix, script_id),
     )
+    connexion.commit()
+    connexion.close()
+
+
+def scripts_sans_sous_titres():
+    """Renvoie les scripts qui ont leur voix mais pas encore leurs sous-titres."""
+    connexion = connecter()
+    lignes = connexion.execute(
+        "SELECT id, style, audio FROM scripts "
+        "WHERE audio IS NOT NULL AND sous_titres IS NULL ORDER BY id"
+    ).fetchall()
+    connexion.close()
+    return lignes
+
+
+def enregistrer_sous_titres(script_id, sous_titres):
+    """Range le chemin du fichier de sous-titres d'un script."""
+    connexion = connecter()
+    connexion.execute("UPDATE scripts SET sous_titres = ? WHERE id = ?", (sous_titres, script_id))
     connexion.commit()
     connexion.close()
