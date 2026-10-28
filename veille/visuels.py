@@ -34,8 +34,9 @@ sys.stdout.reconfigure(encoding="utf-8")
 def preparer_recherche(idee):
     """Transforme une idée d'image en recherche Pixabay. Renvoie (recherche, langue)."""
     avant = idee.split(" : ")[0].strip()
-    # Mots-clés anglais écrits avant « : » (sans accents ni apostrophe : sinon c'est du français)
-    if " : " in idee and avant.isascii() and "'" not in avant:
+    # Mots-clés anglais écrits avant « : » (sans accents, apostrophe ni petit mot français)
+    francais = any(mot in MOTS_VIDES for mot in avant.lower().split())
+    if " : " in idee and avant.isascii() and "'" not in avant and not francais:
         return avant, "en"
     idee = re.sub(r"«[^»]*»|\"[^\"]*\"", "", idee)  # on enlève les textes à afficher entre guillemets
     mots = [m for m in re.findall(r"[\wÀ-ÿ-]+", idee.lower()) if m not in MOTS_VIDES]
