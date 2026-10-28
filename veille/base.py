@@ -66,7 +66,8 @@ def creer_base():
             voix       TEXT,              -- le moteur et la voix utilisés, ex. elevenlabs:Nicolas
             sous_titres TEXT,             -- chemin du fichier de sous-titres .ass
             capcut     TEXT,              -- nom du projet CapCut préparé pour ce script
-            visuels    TEXT               -- chemins des images Pixabay, au format JSON
+            visuels    TEXT,              -- chemins des images Pixabay, au format JSON
+            video      TEXT               -- chemin de la vidéo finale montée par FFmpeg
         )
     """)
     # Si la table scripts a été créée avant l'ajout de la voix, on ajoute les colonnes manquantes
@@ -76,6 +77,7 @@ def creer_base():
     ajouter_colonne(connexion, "sous_titres", "TEXT", table="scripts")
     ajouter_colonne(connexion, "capcut", "TEXT", table="scripts")
     ajouter_colonne(connexion, "visuels", "TEXT", table="scripts")
+    ajouter_colonne(connexion, "video", "TEXT", table="scripts")
     connexion.commit()
     connexion.close()
 
@@ -306,6 +308,25 @@ def enregistrer_visuels(script_id, chemins):
     connexion = connecter()
     connexion.execute("UPDATE scripts SET visuels = ? WHERE id = ?",
                       (json.dumps(chemins), script_id))
+    connexion.commit()
+    connexion.close()
+
+
+def scripts_a_monter():
+    """Renvoie les scripts qui ont leur voix et leurs sous-titres, mais pas encore leur vidéo."""
+    connexion = connecter()
+    lignes = connexion.execute(
+        "SELECT id, audio, duree, sous_titres, visuels FROM scripts "
+        "WHERE audio IS NOT NULL AND sous_titres IS NOT NULL AND video IS NULL ORDER BY id"
+    ).fetchall()
+    connexion.close()
+    return lignes
+
+
+def enregistrer_video(script_id, video):
+    """Range le chemin de la vidéo finale d'un script."""
+    connexion = connecter()
+    connexion.execute("UPDATE scripts SET video = ? WHERE id = ?", (video, script_id))
     connexion.commit()
     connexion.close()
 

@@ -35,7 +35,7 @@ STYLES = {
         "couleur": "&H00FFFFFF",       # blanc
         "actif": "&H00FFD27A",         # bleu clair (#7AD2FF)
         "boite": None,                 # pas de boîte, plus sobre
-        "a_venir": "&H80",             # les mots pas encore dits sont à moitié transparents
+        "a_venir": "&H45",             # les mots pas encore dits sont un peu transparents (lisibles sur photo)
         "pop": 110,
         "pose": 104,
     },
