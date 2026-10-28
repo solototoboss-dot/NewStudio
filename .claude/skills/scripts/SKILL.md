@@ -14,19 +14,22 @@ Suis ces étapes dans l'ordre, depuis la racine du projet.
    - **n°2 : l'explication.** Comment ça marche ou pourquoi c'est important.
    - **n°3 : l'impact.** Ce que ça change pour le public, ou la question que ça pose.
 3. Règles d'écriture de chaque script :
-   - **Durée** : entre 115 et 145 mots, soit 45 à 60 secondes lus à voix haute.
+   - **Durée** : entre 130 et 165 mots, soit 45 à 60 secondes lus par la voix Edge TTS.
    - **Accroche** : la première phrase doit donner envie de rester, en moins de 3 secondes.
    - **Fin** : une phrase de conclusion ou une question au public.
    - **Langue** : phrases courtes, écrites pour être dites. Écris les nombres et les sigles comme on les prononce (« GPT quatre o », « deux minutes »).
    - **Faits** : utilise seulement ce qui est dans le titre, le résumé et le champ `verification`. N'invente aucun chiffre ni aucune citation. Si la vérification émet une réserve (par exemple « en cours d'examen »), dis-la clairement dans le script.
    - **Sujets sensibles** (décès, santé, justice) : ton sobre et factuel, pas de sensationnalisme, parle d'accusations tant que rien n'est jugé. Ne donne jamais de conseil médical.
+   - **Émotion** : la voix ElevenLabs comprend des balises en anglais, entre crochets, placées juste avant la phrase qu'elles colorent. Mets-en 2 à 4 par script, jamais au milieu d'un mot, et pas deux de suite. Balises conseillées : `[excited]` (accroche, annonce), `[curious]` (question), `[amazed]` (chiffre ou découverte), `[serious]` (réserve, mise en garde), `[calm]` (explication), `[thoughtful]` (conclusion). Les balises ne comptent pas dans les mots.
+   - **Sujets sensibles** : seulement `[serious]`, `[calm]` ou `[thoughtful]`. Jamais `[excited]`, `[laughs]` ni `[amazed]`.
+   - **Rythme** : des points de suspension (« ... ») pour une courte pause avant une révélation.
 4. Donne à chaque script un **style de montage** parmi ces 2 :
    - `dynamique` : coupes toutes les 2 à 3 secondes, zooms, gros mots-clés à l'écran, musique rythmée.
    - `explicatif` : plans plus longs, schémas simples, voix posée, sous-titres sobres.
    Utilise les 2 styles pour chaque news (par exemple n°1 en dynamique, n°2 en explicatif). Pour un sujet sensible, choisis seulement `explicatif`.
 5. Pour chaque script, propose **3 à 5 idées d'images** : courtes descriptions de ce qu'on voit à l'écran, dans l'ordre du texte. Pas de logos inventés, pas de visage de vraie personne généré par IA.
 6. Écris tous les scripts dans `data/scripts.json`, avec exactement ce format (une entrée par script) :
-   `[{"news_id": 327, "numero": 1, "angle": "L'annonce de Genie 4", "style": "dynamique", "texte": "...", "images": ["...", "..."]}]`
+   `[{"news_id": 327, "numero": 1, "angle": "L'annonce de Genie 4", "style": "dynamique", "texte": "[excited] Google vient de créer... [curious] Mais ...", "images": ["...", "..."]}]`
 7. Enregistre-les : `.venv/Scripts/python veille/enregistrer_scripts.py`
    Le script affiche la durée estimée de chaque texte. Si un texte est marqué « hors de 45 à 60 s », dis-le-moi.
-8. Montre-moi le résultat : pour chaque news, son titre puis ses 3 scripts (angle, style, durée estimée, texte complet et idées d'images). Rappelle que l'étape suivante est la voix avec Edge TTS.
+8. Montre-moi le résultat : pour chaque news, son titre puis ses 3 scripts (angle, style, durée estimée, texte complet et idées d'images). Rappelle que l'étape suivante est la voix : `.venv/Scripts/python veille/voix.py` (ElevenLabs, avec Edge TTS en secours).

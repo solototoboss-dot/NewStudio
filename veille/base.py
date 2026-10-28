@@ -1,6 +1,7 @@
 # Base de données SQLite : range les news et évite les doublons.
 
 import json  # pour ranger la liste des preuves
+import re  # pour repérer les balises d'émotion comme [excited]
 import sqlite3  # SQLite est inclus dans Python, rien à installer
 from datetime import datetime, timedelta, timezone  # pour les dates
 from pathlib import Path  # pour trouver les fichiers du projet
@@ -59,18 +60,25 @@ def creer_base():
             texte      TEXT NOT NULL,     -- ce que la voix va lire
             images     TEXT,              -- les idées d'images, au format JSON
             mots       INTEGER,           -- nombre de mots du texte
-            ecrit_le   TEXT
+            ecrit_le   TEXT,
+            audio      TEXT,              -- chemin du fichier MP3 de la voix
+            duree      REAL,              -- vraie durée de la voix, en secondes
+            voix       TEXT               -- le moteur et la voix utilisés, ex. elevenlabs:Nicolas
         )
     """)
+    # Si la table scripts a été créée avant l'ajout de la voix, on ajoute les colonnes manquantes
+    ajouter_colonne(connexion, "audio", "TEXT", table="scripts")
+    ajouter_colonne(connexion, "duree", "REAL", table="scripts")
+    ajouter_colonne(connexion, "voix", "TEXT", table="scripts")
     connexion.commit()
     connexion.close()
 
 
-def ajouter_colonne(connexion, nom, type_sql):
-    """Ajoute une colonne à la table news si elle n'existe pas encore."""
-    colonnes = [ligne[1] for ligne in connexion.execute("PRAGMA table_info(news)")]
+def ajouter_colonne(connexion, nom, type_sql, table="news"):
+    """Ajoute une colonne à une table (news par défaut) si elle n'existe pas encore."""
+    colonnes = [ligne[1] for ligne in connexion.execute(f"PRAGMA table_info({table})")]
     if nom not in colonnes:
-        connexion.execute(f"ALTER TABLE news ADD COLUMN {nom} {type_sql}")
+        connexion.execute(f"ALTER TABLE {table} ADD COLUMN {nom} {type_sql}")
 
 
 def maintenant():
@@ -225,8 +233,34 @@ def enregistrer_scripts(scripts):
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (script["news_id"], script["numero"], script["angle"], script["style"],
              script["texte"], json.dumps(script["images"], ensure_ascii=False),
-             len(script["texte"].split()), maintenant()),
+             len(retirer_balises(script["texte"]).split()), maintenant()),
         )
         connexion.execute("UPDATE news SET statut = 'scriptee' WHERE id = ?", (script["news_id"],))
+    connexion.commit()
+    connexion.close()
+
+
+def scripts_sans_voix():
+    """Renvoie les scripts qui n'ont pas encore leur fichier audio."""
+    connexion = connecter()
+    lignes = connexion.execute(
+        "SELECT id, news_id, numero, texte FROM scripts WHERE audio IS NULL ORDER BY id"
+    ).fetchall()
+    connexion.close()
+    return lignes
+
+
+def retirer_balises(texte):
+    """Enlève les balises d'émotion comme [excited] : il ne reste que les mots prononcés."""
+    return re.sub(r"\[[^\]]*\]", "", texte)
+
+
+def enregistrer_voix(script_id, audio, duree, voix):
+    """Range le chemin du fichier audio, sa durée et la voix utilisée pour un script."""
+    connexion = connecter()
+    connexion.execute(
+        "UPDATE scripts SET audio = ?, duree = ?, voix = ? WHERE id = ?",
+        (audio, duree, voix, script_id),
+    )
     connexion.commit()
     connexion.close()

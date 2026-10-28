@@ -12,8 +12,8 @@ DOSSIER_DATA = Path(__file__).parent.parent / "data"
 FICHIER_A_SCRIPTER = DOSSIER_DATA / "a_scripter.json"
 FICHIER_SCRIPTS = DOSSIER_DATA / "scripts.json"
 
-# Une voix française lit environ 2,5 mots par seconde
-MOTS_PAR_SECONDE = 2.5
+# La voix Edge TTS lit environ 2,8 mots par seconde (mesuré sur 12 scripts)
+MOTS_PAR_SECONDE = 2.8
 DUREE_MIN, DUREE_MAX = 45, 60  # durée visée d'une vidéo, en secondes
 STYLES = ["dynamique", "explicatif"]  # les 2 styles de montage
 
@@ -52,7 +52,7 @@ def script_valide(script):
 
 def duree_estimee(texte):
     """Estime en secondes le temps de lecture d'un texte par la voix."""
-    return round(len(texte.split()) / MOTS_PAR_SECONDE)
+    return round(len(base.retirer_balises(texte).split()) / MOTS_PAR_SECONDE)
 
 
 def enregistrer():
