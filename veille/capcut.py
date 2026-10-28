@@ -1,8 +1,10 @@
 # Prépare un projet CapCut par script, avec la bibliothèque open source pyCapCut.
-# Le projet contient la voix et un fond vertical 1080 x 1920. Ensuite, dans CapCut :
+# Le projet contient la voix et les photos Pexels du script (ou un fond uni s'il n'y en a pas
+# encore), en vertical 1080 x 1920. Ensuite, dans CapCut :
 # ouvrir le projet, cliquer sur « Sous-titres automatiques », choisir un style, exporter.
 # CapCut n'a pas d'API officielle : l'export reste manuel.
 
+import json  # pour lire la liste des images d'un script
 import os  # pour trouver le dossier de CapCut dans AppData
 import re  # pour fabriquer un nom de projet sans caractères spéciaux
 import subprocess  # pour lancer FFmpeg qui crée l'image de fond
@@ -16,6 +18,7 @@ import base  # notre fichier base.py, dans le même dossier
 RACINE = Path(__file__).parent.parent
 FICHIER_FOND = RACINE / "data" / "fond_capcut.png"  # fond provisoire, remplacé par les visuels en semaine 7
 COULEUR_FOND = "0x1a1a2e"  # bleu nuit
+ZOOM_FIN = 1.08  # chaque image grossit de 8 % pendant qu'elle est à l'écran
 
 # Le dossier où CapCut range ses projets sur Windows
 DOSSIER_CAPCUT = Path(os.environ["LOCALAPPDATA"]) / "CapCut" / "User Data" / "Projects" / "com.lveditor.draft"
@@ -38,8 +41,19 @@ def nom_projet(script_id, angle):
     return f"Studio {script_id} - {angle}"
 
 
-def creer_projet(dossier, nom, fichier_audio, duree):
-    """Écrit un projet CapCut vertical avec la voix et le fond, de la durée de la voix."""
+def segment_image(fichier, debut, duree):
+    """Crée un morceau de vidéo avec une image qui remplit tout l'écran et zoome doucement (effet Ken Burns)."""
+    image = cc.VideoMaterial(str(fichier))
+    # CapCut place l'image « en entier » dans l'écran ; on l'agrandit pour qu'elle le remplisse sans bandes
+    remplir = max(1080 / image.width, 1920 / image.height) / min(1080 / image.width, 1920 / image.height)
+    segment = cc.VideoSegment(image, cc.Timerange(debut, duree))
+    segment.add_keyframe(cc.KeyframeProperty.uniform_scale, 0, remplir)
+    segment.add_keyframe(cc.KeyframeProperty.uniform_scale, duree, remplir * ZOOM_FIN)
+    return segment
+
+
+def creer_projet(dossier, nom, fichier_audio, images):
+    """Écrit un projet CapCut vertical : la voix, et les images réparties sur toute sa durée."""
     projet = dossier.create_draft(nom, 1080, 1920, allow_replace=True)
     projet.add_track(cc.TrackType.video)
     projet.add_track(cc.TrackType.audio)
@@ -47,7 +61,15 @@ def creer_projet(dossier, nom, fichier_audio, duree):
     # La voix d'abord : sa vraie durée (en microsecondes) fixe la durée de la vidéo
     voix = cc.AudioMaterial(str(fichier_audio))
     projet.add_segment(cc.AudioSegment(voix, cc.Timerange(0, voix.duration)))
-    projet.add_segment(cc.VideoSegment(str(FICHIER_FOND), cc.Timerange(0, voix.duration)))
+
+    if not images:  # pas encore de visuels : le fond uni provisoire
+        projet.add_segment(cc.VideoSegment(str(FICHIER_FOND), cc.Timerange(0, voix.duration)))
+    else:
+        # Chaque image dure le même temps, dans l'ordre des idées d'images (donc du texte)
+        part = voix.duration // len(images)
+        for i, image in enumerate(images):
+            duree = part if i < len(images) - 1 else voix.duration - part * i  # la dernière finit pile avec la voix
+            projet.add_segment(segment_image(image, part * i, duree))
     projet.save()
 
 
@@ -65,15 +87,16 @@ def main():
 
     creer_fond()
     dossier = cc.DraftFolder(str(DOSSIER_CAPCUT))
-    for script_id, news_id, numero, angle, audio, duree in scripts:
+    for script_id, news_id, numero, angle, audio, duree, visuels in scripts:
         nom = nom_projet(script_id, angle)
+        images = [(RACINE / chemin).resolve() for chemin in json.loads(visuels or "[]")]
         try:
-            creer_projet(dossier, nom, (RACINE / audio).resolve(), duree)
+            creer_projet(dossier, nom, (RACINE / audio).resolve(), images)
         except Exception as erreur:
             print(f"Script {script_id} : projet CapCut non créé ({erreur})")
             continue
         base.enregistrer_capcut(script_id, nom)
-        print(f"Projet CapCut prêt : « {nom} » ({duree:.0f} s)")
+        print(f"Projet CapCut prêt : « {nom} » ({duree:.0f} s, {len(images)} image(s))")
 
     print("\nDans CapCut : ouvre chaque projet, clique sur Texte > Sous-titres automatiques,")
     print("choisis un style, puis exporte la vidéo.")
