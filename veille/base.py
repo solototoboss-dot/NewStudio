@@ -66,7 +66,7 @@ def creer_base():
             voix       TEXT,              -- le moteur et la voix utilisés, ex. elevenlabs:Nicolas
             sous_titres TEXT,             -- chemin du fichier de sous-titres .ass
             capcut     TEXT,              -- nom du projet CapCut préparé pour ce script
-            visuels    TEXT               -- chemins des images Pexels, au format JSON
+            visuels    TEXT               -- chemins des images Pixabay, au format JSON
         )
     """)
     # Si la table scripts a été créée avant l'ajout de la voix, on ajoute les colonnes manquantes

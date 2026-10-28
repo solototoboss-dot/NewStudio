@@ -1,5 +1,5 @@
 # Prépare un projet CapCut par script, avec la bibliothèque open source pyCapCut.
-# Le projet contient la voix et les photos Pexels du script (ou un fond uni s'il n'y en a pas
+# Le projet contient la voix et les photos Pixabay du script (ou un fond uni s'il n'y en a pas
 # encore), en vertical 1080 x 1920. Ensuite, dans CapCut :
 # ouvrir le projet, cliquer sur « Sous-titres automatiques », choisir un style, exporter.
 # CapCut n'a pas d'API officielle : l'export reste manuel.

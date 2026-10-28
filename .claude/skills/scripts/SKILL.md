@@ -27,7 +27,7 @@ Suis ces étapes dans l'ordre, depuis la racine du projet.
    - `dynamique` : coupes toutes les 2 à 3 secondes, zooms, gros mots-clés à l'écran, musique rythmée.
    - `explicatif` : plans plus longs, schémas simples, voix posée, sous-titres sobres.
    Utilise les 2 styles pour chaque news (par exemple n°1 en dynamique, n°2 en explicatif). Pour un sujet sensible, choisis seulement `explicatif`.
-5. Pour chaque script, propose **3 à 5 idées d'images**, dans l'ordre du texte. Chaque idée commence par 2 à 4 mots-clés de recherche **en anglais** pour la banque de photos Pexels, puis « : », puis la description en français. Exemple : `robot hand computer mouse : Main de robot qui tient une souris`. Les mots-clés décrivent une photo réelle qui existe probablement (objets, lieux, gestes), jamais un logo ni une personne célèbre.
+5. Pour chaque script, propose **3 à 5 idées d'images**, dans l'ordre du texte. Chaque idée commence par 2 à 4 mots-clés de recherche **en anglais** pour la banque de photos Pixabay, puis « : », puis la description en français. Exemple : `robot hand computer mouse : Main de robot qui tient une souris`. Les mots-clés décrivent une photo réelle qui existe probablement (objets, lieux, gestes), jamais un logo ni une personne célèbre.
 6. Écris tous les scripts dans `data/scripts.json`, avec exactement ce format (une entrée par script) :
    `[{"news_id": 327, "numero": 1, "angle": "L'annonce de Genie 4", "style": "dynamique", "texte": "[excited] Google vient de créer... [curious] Mais ...", "images": ["...", "..."]}]`
 7. Enregistre-les : `.venv/Scripts/python veille/enregistrer_scripts.py`
