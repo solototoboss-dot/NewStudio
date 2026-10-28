@@ -3,3 +3,4 @@ requests
 python-dotenv
 edge-tts==7.3.1
 elevenlabs==2.75.0
+pycapcut==0.0.4

@@ -64,7 +64,8 @@ def creer_base():
             audio      TEXT,              -- chemin du fichier MP3 de la voix
             duree      REAL,              -- vraie durée de la voix, en secondes
             voix       TEXT,              -- le moteur et la voix utilisés, ex. elevenlabs:Nicolas
-            sous_titres TEXT              -- chemin du fichier de sous-titres .ass
+            sous_titres TEXT,             -- chemin du fichier de sous-titres .ass
+            capcut     TEXT               -- nom du projet CapCut préparé pour ce script
         )
     """)
     # Si la table scripts a été créée avant l'ajout de la voix, on ajoute les colonnes manquantes
@@ -72,6 +73,7 @@ def creer_base():
     ajouter_colonne(connexion, "duree", "REAL", table="scripts")
     ajouter_colonne(connexion, "voix", "TEXT", table="scripts")
     ajouter_colonne(connexion, "sous_titres", "TEXT", table="scripts")
+    ajouter_colonne(connexion, "capcut", "TEXT", table="scripts")
     connexion.commit()
     connexion.close()
 
@@ -283,5 +285,24 @@ def enregistrer_sous_titres(script_id, sous_titres):
     """Range le chemin du fichier de sous-titres d'un script."""
     connexion = connecter()
     connexion.execute("UPDATE scripts SET sous_titres = ? WHERE id = ?", (sous_titres, script_id))
+    connexion.commit()
+    connexion.close()
+
+
+def scripts_sans_capcut():
+    """Renvoie les scripts qui ont leur voix mais pas encore leur projet CapCut."""
+    connexion = connecter()
+    lignes = connexion.execute(
+        "SELECT id, news_id, numero, angle, audio, duree FROM scripts "
+        "WHERE audio IS NOT NULL AND capcut IS NULL ORDER BY id"
+    ).fetchall()
+    connexion.close()
+    return lignes
+
+
+def enregistrer_capcut(script_id, nom_projet):
+    """Range le nom du projet CapCut préparé pour un script."""
+    connexion = connecter()
+    connexion.execute("UPDATE scripts SET capcut = ? WHERE id = ?", (nom_projet, script_id))
     connexion.commit()
     connexion.close()
