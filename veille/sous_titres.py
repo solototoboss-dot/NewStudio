@@ -13,13 +13,15 @@ import base  # notre fichier base.py, dans le même dossier
 
 RACINE = Path(__file__).parent.parent
 DOSSIER_AUDIO = RACINE / "data" / "audio"
+# Les polices du projet (Montserrat, licence libre OFL) : à donner à FFmpeg avec fontsdir
+DOSSIER_POLICES = RACINE / "assets" / "polices"
 
 # Réglages de chaque style de montage (vidéo verticale 1080 x 1920)
 # Les couleurs ASS s'écrivent &HAABBGGRR : transparence, bleu, vert, rouge (l'inverse de l'habitude)
 STYLES = {
     # Gros mots en majuscules, 3 au maximum, boîte vert-jaune derrière le mot dit : pour les vidéos rythmées
     "dynamique": {
-        "police": "Arial Black", "taille": 96, "mots_max": 3, "majuscules": True,
+        "police": "Montserrat ExtraBold", "taille": 96, "mots_max": 3, "majuscules": True,
         "couleur": "&H00FFFFFF",       # blanc
         "actif": "&H00000000",         # mot dit en noir, sur la boîte
         "boite": "&H0033F0B4",         # boîte vert-jaune (#B4F033)
@@ -29,7 +31,7 @@ STYLES = {
     },
     # Phrase plus longue, mots à venir en transparence, mot dit en bleu clair : pour les vidéos posées
     "explicatif": {
-        "police": "Arial Black", "taille": 74, "mots_max": 5, "majuscules": False,
+        "police": "Montserrat ExtraBold", "taille": 74, "mots_max": 5, "majuscules": False,
         "couleur": "&H00FFFFFF",       # blanc
         "actif": "&H00FFD27A",         # bleu clair (#7AD2FF)
         "boite": None,                 # pas de boîte, plus sobre
@@ -61,8 +63,8 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Texte,{police},{taille},{couleur},{couleur},&H00000000,&H96000000,-1,0,0,0,100,100,2,0,1,7,4,2,70,70,{POSITION_BAS},1
-Style: Boite,{police},{taille},&HFF000000,&HFF000000,{boite},&HFF000000,-1,0,0,0,100,100,2,0,3,11,0,2,70,70,{POSITION_BAS},1
+Style: Texte,{police},{taille},{couleur},{couleur},&H00000000,&H96000000,0,0,0,0,100,100,2,0,1,7,4,2,70,70,{POSITION_BAS},1
+Style: Boite,{police},{taille},&HFF000000,&HFF000000,{boite},&HFF000000,0,0,0,0,100,100,2,0,3,11,0,2,70,70,{POSITION_BAS},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
