@@ -74,7 +74,9 @@ def main():
     DOSSIER_VISUELS.mkdir(parents=True, exist_ok=True)
     credits = json.loads(FICHIER_CREDITS.read_text(encoding="utf-8")) if FICHIER_CREDITS.exists() else {}
 
-    scripts = base.scripts_sans_visuels()
+    # `python veille/visuels.py 2` traite seulement le script 2 ; sans numéro, tous ceux qui attendent
+    choisi = int(sys.argv[1]) if len(sys.argv) > 1 else None
+    scripts = [s for s in base.scripts_sans_visuels() if choisi in (None, s[0])]
     if not scripts:
         print("Aucun script n'attend ses visuels.")
         return
@@ -97,7 +99,7 @@ def main():
             # « largeImageURL » : 1280 pixels, suffisant pour une vidéo 1080 x 1920 avec le zoom
             telecharger(photo["largeImageURL"], fichier)
             deja_prises.add(photo["id"])
-            chemins.append(str(fichier.relative_to(RACINE)))
+            chemins.append(fichier.relative_to(RACINE).as_posix())
             credits[fichier.name] = {"photographe": photo["user"], "lien": photo["pageURL"]}
 
         if chemins:
