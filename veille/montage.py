@@ -55,7 +55,7 @@ def commande_ffmpeg(audio, duree, sous_titres, images, sortie):
     commande += [
         "-filter_complex", ";".join(filtres),
         "-map", "[video]", "-map", f"{entree_voix}:a",
-        "-t", f"{duree + 0.3:.2f}",  # la vidéo s'arrête juste après le dernier mot
+        "-t", f"{duree:.2f}",  # la vidéo dure exactement le temps de l'audio
         "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "192k",
         "-movflags", "+faststart",  # la vidéo démarre vite quand on la regarde en ligne
@@ -67,7 +67,9 @@ def commande_ffmpeg(audio, duree, sous_titres, images, sortie):
 def main():
     base.creer_base()
     DOSSIER_VIDEOS.mkdir(parents=True, exist_ok=True)
-    scripts = base.scripts_a_monter()
+    # `python veille/montage.py 2` monte seulement le script 2 ; sans numéro, tous ceux qui attendent
+    numero = int(sys.argv[1]) if len(sys.argv) > 1 else None
+    scripts = [s for s in base.scripts_a_monter() if numero in (None, s[0])]
     if not scripts:
         print("Aucun script n'attend sa vidéo. Lance d'abord voix.py puis sous_titres.py.")
         return
