@@ -13,8 +13,6 @@ import base  # notre fichier base.py, dans le même dossier
 
 RACINE = Path(__file__).parent.parent
 DOSSIER_AUDIO = RACINE / "data" / "audio"
-# Les polices du projet (Montserrat, licence libre OFL) : à donner à FFmpeg avec fontsdir
-DOSSIER_POLICES = RACINE / "assets" / "polices"
 
 # Réglages de chaque style de montage (vidéo verticale 1080 x 1920)
 # Les couleurs ASS s'écrivent &HAABBGGRR : transparence, bleu, vert, rouge (l'inverse de l'habitude)
@@ -180,7 +178,7 @@ def main():
         with open(fichier_ass, "w", encoding="utf-8") as fichier:
             fichier.write(entete(reglages) + "\n".join(lignes) + "\n")
 
-        base.enregistrer_sous_titres(script_id, str(fichier_ass.relative_to(RACINE)))
+        base.enregistrer_sous_titres(script_id, fichier_ass.relative_to(RACINE).as_posix())
         print(f"Script {script_id} [{style}] : {len(mots)} mots, {len(lignes)} lignes de sous-titres")
 
     print("\nSous-titres dans data/audio/ (fichiers .ass)")
