@@ -59,18 +59,27 @@ def creer_base():
             texte      TEXT NOT NULL,     -- ce que la voix va lire
             images     TEXT,              -- les idées d'images, au format JSON
             mots       INTEGER,           -- nombre de mots du texte
-            ecrit_le   TEXT
+            ecrit_le   TEXT,
+            audio      TEXT,              -- chemin du fichier MP3 de la voix
+            duree      REAL,              -- vraie durée du fichier audio, en secondes
+            voix       TEXT,              -- la voix utilisée, ex. edge:fr-FR-HenriNeural
+            vitesse    TEXT               -- le réglage de vitesse gardé, ex. -4%
         )
     """)
+    # Si la table scripts a été créée avant l'ajout de la voix, on ajoute les colonnes manquantes
+    ajouter_colonne(connexion, "audio", "TEXT", table="scripts")
+    ajouter_colonne(connexion, "duree", "REAL", table="scripts")
+    ajouter_colonne(connexion, "voix", "TEXT", table="scripts")
+    ajouter_colonne(connexion, "vitesse", "TEXT", table="scripts")
     connexion.commit()
     connexion.close()
 
 
-def ajouter_colonne(connexion, nom, type_sql):
-    """Ajoute une colonne à la table news si elle n'existe pas encore."""
-    colonnes = [ligne[1] for ligne in connexion.execute("PRAGMA table_info(news)")]
+def ajouter_colonne(connexion, nom, type_sql, table="news"):
+    """Ajoute une colonne à une table (news par défaut) si elle n'existe pas encore."""
+    colonnes = [ligne[1] for ligne in connexion.execute(f"PRAGMA table_info({table})")]
     if nom not in colonnes:
-        connexion.execute(f"ALTER TABLE news ADD COLUMN {nom} {type_sql}")
+        connexion.execute(f"ALTER TABLE {table} ADD COLUMN {nom} {type_sql}")
 
 
 def maintenant():
@@ -230,3 +239,42 @@ def enregistrer_scripts(scripts):
         connexion.execute("UPDATE news SET statut = 'scriptee' WHERE id = ?", (script["news_id"],))
     connexion.commit()
     connexion.close()
+
+
+def audio_present(chemin):
+    """Dit si un fichier audio existe et n'est pas vide. Le chemin part de la racine du projet."""
+    if not chemin:
+        return False
+    fichier = FICHIER_BASE.parent.parent / chemin
+    return fichier.is_file() and fichier.stat().st_size > 0
+
+
+def scripts_sans_voix():
+    """Renvoie les scripts dont le fichier audio n'est pas noté, manque ou est vide."""
+    connexion = connecter()
+    lignes = connexion.execute(
+        "SELECT id, news_id, numero, texte, audio FROM scripts ORDER BY id"
+    ).fetchall()
+    connexion.close()
+    return [ligne[:4] for ligne in lignes if not audio_present(ligne[4])]
+
+
+def enregistrer_voix(script_id, audio, duree, voix, vitesse):
+    """Range le chemin du fichier audio, sa durée, la voix et la vitesse d'un script."""
+    connexion = connecter()
+    connexion.execute(
+        "UPDATE scripts SET audio = ?, duree = ?, voix = ?, vitesse = ? WHERE id = ?",
+        (audio, duree, voix, vitesse, script_id),
+    )
+    connexion.commit()
+    connexion.close()
+
+
+def scripts_avec_voix():
+    """Renvoie le bilan des scripts qui ont leur audio : numéro, fichier, durée et vitesse."""
+    connexion = connecter()
+    lignes = connexion.execute(
+        "SELECT id, audio, duree, vitesse FROM scripts WHERE audio IS NOT NULL ORDER BY id"
+    ).fetchall()
+    connexion.close()
+    return lignes
