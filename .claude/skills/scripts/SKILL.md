@@ -24,9 +24,9 @@ Suis ces étapes dans l'ordre, depuis la racine du projet.
    - `dynamique` : coupes toutes les 2 à 3 secondes, zooms, gros mots-clés à l'écran, musique rythmée.
    - `explicatif` : plans plus longs, schémas simples, voix posée, sous-titres sobres.
    Utilise les 2 styles pour chaque news (par exemple n°1 en dynamique, n°2 en explicatif). Pour un sujet sensible, choisis seulement `explicatif`.
-5. Pour chaque script, propose **3 à 5 idées d'images** : courtes descriptions de ce qu'on voit à l'écran, dans l'ordre du texte. Pas de logos inventés, pas de visage de vraie personne généré par IA.
+5. Pour chaque script, propose **3 à 5 idées d'images**, dans l'ordre du texte. Chaque idée commence par 2 à 4 mots-clés de recherche **en anglais** pour la banque de photos Pixabay, puis « : », puis la description en français. Exemple : `robot hand computer mouse : Main de robot qui tient une souris`. Les mots-clés décrivent une photo réelle qui existe probablement (objets, lieux, gestes), jamais un logo ni une personne célèbre.
 6. Écris tous les scripts dans `data/scripts.json`, avec exactement ce format (une entrée par script) :
    `[{"news_id": 327, "numero": 1, "angle": "L'annonce de Genie 4", "style": "dynamique", "texte": "...", "images": ["...", "..."]}]`
 7. Enregistre-les : `.venv/Scripts/python veille/enregistrer_scripts.py`
    Le script affiche la durée estimée de chaque texte. Si un texte est marqué « hors de 45 à 60 s », dis-le-moi.
-8. Montre-moi le résultat : pour chaque news, son titre puis ses 3 scripts (angle, style, durée estimée, texte complet et idées d'images). Rappelle que l'étape suivante est la voix avec Edge TTS.
+8. Montre-moi le résultat : pour chaque news, son titre puis ses 3 scripts (angle, style, durée estimée, texte complet et idées d'images). Rappelle les étapes suivantes : `veille/voix.py`, `veille/sous_titres.py`, `veille/visuels.py`, puis `veille/montage.py`.
