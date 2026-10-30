@@ -1,3 +1,4 @@
 feedparser==6.0.14
 requests
 python-dotenv
+edge-tts==7.3.1
