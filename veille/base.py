@@ -63,7 +63,10 @@ def creer_base():
             audio      TEXT,              -- chemin du fichier MP3 de la voix
             duree      REAL,              -- vraie durée du fichier audio, en secondes
             voix       TEXT,              -- la voix utilisée, ex. edge:fr-FR-HenriNeural
-            vitesse    TEXT               -- le réglage de vitesse gardé, ex. -4%
+            vitesse    TEXT,              -- le réglage de vitesse gardé, ex. -4%
+            sous_titres TEXT,             -- chemin du fichier de sous-titres .ass
+            visuels    TEXT,              -- chemins des images Pixabay, au format JSON
+            video      TEXT               -- chemin de la vidéo finale montée par FFmpeg
         )
     """)
     # Si la table scripts a été créée avant l'ajout de la voix, on ajoute les colonnes manquantes
@@ -71,6 +74,9 @@ def creer_base():
     ajouter_colonne(connexion, "duree", "REAL", table="scripts")
     ajouter_colonne(connexion, "voix", "TEXT", table="scripts")
     ajouter_colonne(connexion, "vitesse", "TEXT", table="scripts")
+    ajouter_colonne(connexion, "sous_titres", "TEXT", table="scripts")
+    ajouter_colonne(connexion, "visuels", "TEXT", table="scripts")
+    ajouter_colonne(connexion, "video", "TEXT", table="scripts")
     connexion.commit()
     connexion.close()
 
@@ -249,21 +255,28 @@ def audio_present(chemin):
     return fichier.is_file() and fichier.stat().st_size > 0
 
 
+def minutage_present(chemin_audio):
+    """Dit si le minutage des mots existe à côté du fichier audio : script_1_mots.json."""
+    return audio_present(chemin_audio.replace(".mp3", "_mots.json"))
+
+
 def scripts_sans_voix():
-    """Renvoie les scripts dont le fichier audio n'est pas noté, manque ou est vide."""
+    """Renvoie les scripts à qui il manque un fichier audio rempli ou le minutage de ses mots."""
     connexion = connecter()
     lignes = connexion.execute(
         "SELECT id, news_id, numero, texte, audio FROM scripts ORDER BY id"
     ).fetchall()
     connexion.close()
-    return [ligne[:4] for ligne in lignes if not audio_present(ligne[4])]
+    return [ligne[:4] for ligne in lignes
+            if not (audio_present(ligne[4]) and minutage_present(ligne[4]))]
 
 
 def enregistrer_voix(script_id, audio, duree, voix, vitesse):
-    """Range le chemin du fichier audio, sa durée, la voix et la vitesse d'un script."""
+    """Range l'audio d'un script. Ses sous-titres et sa vidéo ne collent plus : ils sont à refaire."""
     connexion = connecter()
     connexion.execute(
-        "UPDATE scripts SET audio = ?, duree = ?, voix = ?, vitesse = ? WHERE id = ?",
+        "UPDATE scripts SET audio = ?, duree = ?, voix = ?, vitesse = ?, "
+        "sous_titres = NULL, video = NULL WHERE id = ?",
         (audio, duree, voix, vitesse, script_id),
     )
     connexion.commit()
@@ -278,3 +291,60 @@ def scripts_avec_voix():
     ).fetchall()
     connexion.close()
     return lignes
+
+
+def scripts_sans_sous_titres():
+    """Renvoie les scripts qui ont leur voix mais pas encore leurs sous-titres."""
+    connexion = connecter()
+    lignes = connexion.execute(
+        "SELECT id, style, audio FROM scripts "
+        "WHERE audio IS NOT NULL AND sous_titres IS NULL ORDER BY id"
+    ).fetchall()
+    connexion.close()
+    return lignes
+
+
+def enregistrer_sous_titres(script_id, sous_titres):
+    """Range le chemin du fichier de sous-titres d'un script."""
+    connexion = connecter()
+    connexion.execute("UPDATE scripts SET sous_titres = ? WHERE id = ?", (sous_titres, script_id))
+    connexion.commit()
+    connexion.close()
+
+
+def scripts_sans_visuels():
+    """Renvoie les scripts qui ont leurs idées d'images mais pas encore leurs visuels."""
+    connexion = connecter()
+    lignes = connexion.execute(
+        "SELECT id, images FROM scripts WHERE visuels IS NULL ORDER BY id"
+    ).fetchall()
+    connexion.close()
+    return lignes
+
+
+def enregistrer_visuels(script_id, chemins):
+    """Range la liste des images téléchargées pour un script."""
+    connexion = connecter()
+    connexion.execute("UPDATE scripts SET visuels = ? WHERE id = ?",
+                      (json.dumps(chemins), script_id))
+    connexion.commit()
+    connexion.close()
+
+
+def scripts_a_monter():
+    """Renvoie les scripts qui ont leur voix et leurs sous-titres, mais pas encore leur vidéo."""
+    connexion = connecter()
+    lignes = connexion.execute(
+        "SELECT id, audio, duree, sous_titres, visuels FROM scripts "
+        "WHERE audio IS NOT NULL AND sous_titres IS NOT NULL AND video IS NULL ORDER BY id"
+    ).fetchall()
+    connexion.close()
+    return lignes
+
+
+def enregistrer_video(script_id, video):
+    """Range le chemin de la vidéo finale d'un script."""
+    connexion = connecter()
+    connexion.execute("UPDATE scripts SET video = ? WHERE id = ?", (video, script_id))
+    connexion.commit()
+    connexion.close()
