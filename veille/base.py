@@ -336,6 +336,24 @@ def scripts_a_monter():
     return lignes
 
 
+def scripts_du_matin(nombre):
+    """Choisit les scripts à monter : un par news (le n°1 d'abord), news les plus récentes en premier.
+    Seuls les scripts qui ont leur voix ET leurs photos sont pris : jamais de vidéo sur fond vide."""
+    connexion = connecter()
+    lignes = connexion.execute(
+        "SELECT id, news_id FROM scripts "
+        "WHERE audio IS NOT NULL AND visuels IS NOT NULL AND visuels != '[]' AND video IS NULL "
+        "ORDER BY news_id DESC, numero"
+    ).fetchall()
+    connexion.close()
+    choisis, news_vues = [], set()
+    for script_id, news_id in lignes:
+        if news_id not in news_vues and len(choisis) < nombre:
+            choisis.append(script_id)
+            news_vues.add(news_id)
+    return choisis
+
+
 def infos_montage(script_id):
     """Renvoie ce qu'il faut pour monter un script : son angle, sa voix, sa durée et ses photos."""
     connexion = connecter()

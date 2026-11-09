@@ -263,16 +263,16 @@ def main():
     DOSSIER_VIDEOS.mkdir(parents=True, exist_ok=True)
     reglages = json.loads(FICHIER_REGLAGES.read_text(encoding="utf-8"))
 
-    # Les numéros donnés au lancement, sinon les scripts qui attendent leur vidéo
-    numeros = [int(n) for n in sys.argv[1:]] or [ligne[0] for ligne in base.scripts_a_monter()]
+    # Les numéros donnés au lancement, sinon les meilleurs scripts du jour (3 par défaut, un par news)
+    numeros = [int(n) for n in sys.argv[1:]] or base.scripts_du_matin(reglages["videos_par_matin"])
     if not numeros:
-        print("Aucun script n'attend sa vidéo. Lance d'abord voix.py, visuels.py et sous_titres.py.")
+        print("Aucun script prêt à monter (il faut la voix et les photos). Lance d'abord voix.py et visuels.py.")
         return
 
     for script_id in numeros:
         infos = base.infos_montage(script_id)
-        if not infos or not infos[1]:
-            print(f"Script {script_id} : pas de voix, montage impossible.")
+        if not infos or not infos[1] or not json.loads(infos[3] or "[]"):
+            print(f"Script {script_id} : il manque la voix ou les photos, montage impossible.")
             continue
         angle, audio, duree, visuels = infos
         dossier, nb_sons = preparer_projet(script_id, angle, audio, duree, visuels, reglages)

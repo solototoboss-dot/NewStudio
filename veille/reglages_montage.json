@@ -75,6 +75,8 @@
     "ding": 0.35
   },
 
+  "videos_par_matin": 3,
+
   "rendu": {
     "qualite_crf": 20,
     "volume_cible_lufs": -14,
