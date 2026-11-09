@@ -78,6 +78,17 @@ def creer_base():
     ajouter_colonne(connexion, "capcut", "TEXT", table="scripts")
     ajouter_colonne(connexion, "visuels", "TEXT", table="scripts")
     ajouter_colonne(connexion, "video", "TEXT", table="scripts")
+
+    # Table des retours : ce que je dis après chaque montage, et ce que le studio a changé pour s'améliorer
+    connexion.execute("""
+        CREATE TABLE IF NOT EXISTS retours (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            script_id    INTEGER NOT NULL,  -- la vidéo regardée
+            retour       TEXT NOT NULL,     -- ma remarque, ou « rien » si la vidéo me va
+            changements  TEXT,              -- ce qui a été modifié (réglages, code, skill)
+            donne_le     TEXT
+        )
+    """)
     connexion.commit()
     connexion.close()
 
@@ -318,6 +329,38 @@ def scripts_a_monter():
     lignes = connexion.execute(
         "SELECT id, audio, duree, sous_titres, visuels FROM scripts "
         "WHERE audio IS NOT NULL AND sous_titres IS NOT NULL AND video IS NULL ORDER BY id"
+    ).fetchall()
+    connexion.close()
+    return lignes
+
+
+def infos_montage(script_id):
+    """Renvoie ce qu'il faut pour monter un script : son angle, sa voix, sa durée et ses photos."""
+    connexion = connecter()
+    ligne = connexion.execute(
+        "SELECT angle, audio, duree, visuels FROM scripts WHERE id = ?", (script_id,)
+    ).fetchone()
+    connexion.close()
+    return ligne
+
+
+def enregistrer_retour(script_id, retour, changements):
+    """Range mon retour sur une vidéo et ce que le studio a changé grâce à lui."""
+    connexion = connecter()
+    connexion.execute(
+        "INSERT INTO retours (script_id, retour, changements, donne_le) VALUES (?, ?, ?, ?)",
+        (script_id, retour, changements, maintenant()),
+    )
+    connexion.commit()
+    connexion.close()
+
+
+def derniers_retours(nombre=10):
+    """Renvoie les derniers retours, du plus récent au plus ancien."""
+    connexion = connecter()
+    lignes = connexion.execute(
+        "SELECT id, script_id, retour, changements, donne_le FROM retours ORDER BY id DESC LIMIT ?",
+        (nombre,),
     ).fetchall()
     connexion.close()
     return lignes

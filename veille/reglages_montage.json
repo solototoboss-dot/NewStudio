@@ -1,0 +1,82 @@
+{
+  "regles_apprises": [
+    "Sous-titres en majuscules avec contour noir, 3 mots maximum, mot dit dans une boîte vert-jaune.",
+    "Un son court sur chaque événement visuel (whoosh sur les transitions, pop sur les emojis), jamais plus fort que la voix."
+  ],
+
+  "sous_titres": {
+    "mots_max": 3,
+    "pause_max": 0.6,
+    "taille": 92,
+    "distance_du_bas": 600,
+    "majuscules": true,
+    "couleur": "#FFFFFF",
+    "couleur_mot_cle": "#FFE14D",
+    "couleur_boite": "#B4F033",
+    "couleur_mot_dans_boite": "#000000",
+    "epaisseur_contour": 10,
+    "grossissement_mot_dit": 1.15
+  },
+
+  "emojis": {
+    "actifs": true,
+    "taille": 190,
+    "ecart_min": 2.5,
+    "duree": 1.4,
+    "dictionnaire": {
+      "ia": "🤖", "robot": "🤖", "ordinateur": "💻", "ecran": "🖥️", "souris": "🖱️", "clavier": "⌨️",
+      "probleme": "⚠️", "attention": "🚨", "danger": "🚨", "vitesse": "⚡", "rapide": "⚡",
+      "cout": "💸", "prix": "💰", "argent": "💰", "milliards": "💰", "millions": "💰",
+      "justice": "⚖️", "proces": "⚖️", "loi": "⚖️", "famille": "👨‍👩‍👧", "nouveau": "✨", "nouvelle": "✨",
+      "google": "🔍", "recherche": "🔍", "verifie": "✅", "resultat": "✅", "parler": "💬", "question": "❓",
+      "agir": "🚀", "monde": "🌍", "emploi": "💼", "travail": "💼", "image": "🖼️", "video": "🎬",
+      "voix": "🎙️", "securite": "🔒", "donnees": "🗂️", "secret": "🤫", "record": "🏆", "puce": "🔌"
+    }
+  },
+
+  "zoom_punch": {
+    "actif": true,
+    "force": 1.1,
+    "ecart_min": 3.0
+  },
+
+  "photos": {
+    "zoom_depart": 1.08,
+    "zoom_fin": 1.2,
+    "duree_transition": 0.35,
+    "transitions": ["glisse", "zoom", "fondu"],
+    "flash": 0.55,
+    "assombrissement_bas": 0.55
+  },
+
+  "accroche": {
+    "badge": "🚨 ACTU IA",
+    "couleur_badge": "#FF2E3E",
+    "taille_titre": 76,
+    "duree": 2.4,
+    "secousse": true
+  },
+
+  "fin": {
+    "texte": "🔔 Suis-nous pour l'actu IA",
+    "couleur": "#FF2E3E",
+    "duree": 2.6
+  },
+
+  "barre_progression": {
+    "active": true,
+    "couleur": "#B4F033"
+  },
+
+  "sons": {
+    "boom": 0.55,
+    "whoosh": 0.45,
+    "pop": 0.35,
+    "ding": 0.35
+  },
+
+  "rendu": {
+    "qualite_crf": 20,
+    "processus_paralleles": 2
+  }
+}
