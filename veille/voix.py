@@ -44,7 +44,9 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 def voix_elevenlabs(texte, fichier_audio):
     """Crée la voix avec ElevenLabs et renvoie la liste des mots avec leur début et leur fin."""
-    client = ElevenLabs()
+    # On donne la clé nous-mêmes : sinon la bibliothèque la cherche à son import,
+    # avant que load_dotenv ait lu le .env, et elle part sans clé
+    client = ElevenLabs(api_key=os.getenv("ELEVENLABS_API_KEY"))
     reponse = client.text_to_speech.convert_with_timestamps(
         ELEVENLABS_VOIX_ID,
         text=texte,
