@@ -18,5 +18,7 @@ Projet de portfolio pour décrocher une alternance en IA.
 - Ordre du studio : /veille, /scripts, puis veille/matin.py (voix.py, visuels.py, sous_titres.py, hyperframes.py, controle.py), puis /retour ; montage.py (secours FFmpeg) et capcut.py (projet pour Edit Pilot) restent disponibles.
 - Tâche planifiée « studio-actu-ia-matin » (application Claude, section Scheduled) : chaque jour vers 7 h, /veille, /scripts, matin.py puis un résumé ; elle ne tourne que si l'application est ouverte (sinon au prochain lancement) et ne commite ni ne publie rien. Premier vrai test le 9 novembre 2026 : 3 vidéos (scripts 7, 10, 4) montées en 13 min, toutes OK au contrôle.
 - Idées pour /retour : l'accroche reprend l'angle du script (« Les faits de la plainte »), pas assez accrocheuse ; sur un sujet sensible (justice, décès), emojis et sons joyeux pas assez sobres.
-- Prochaine étape : semaines 9 et 10 (benchmark et portfolio).
+- Semaine 9 : veille/benchmark.py lit la base en lecture seule (sans appel payant) et écrit docs/BENCHMARK.md : entonnoir des news, voix utilisées et coût estimé, mesures FFmpeg de chaque vidéo, temps de montage lus dans les journaux, retours ; depuis un worktree, lui donner le dossier principal en argument. Semaine 10 : README réécrit en portfolio (schéma Mermaid, chiffres, choix techniques, limites).
+- Suivi du mode autonome : PROGRESS.md, DECISIONS.md, BLOCKED.md à la racine.
+- Prochaine étape : les décisions de BLOCKED.md (merge, publication, CapCut Pro), puis des vidéos ElevenLabs pour le portfolio.
 - Mets à jour cette section à chaque étape terminée.
