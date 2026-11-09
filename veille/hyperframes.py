@@ -5,8 +5,10 @@
 # Lancement : python veille/hyperframes.py        -> monte les scripts qui n'ont pas encore de vidéo
 #             python veille/hyperframes.py 2 5    -> remonte les scripts 2 et 5 (après un retour)
 
+import copy  # pour copier les réglages avant de les adapter au sujet
 import html  # pour écrire le texte sans casser la page web
 import json  # pour lire les réglages, les images et le minutage des mots
+import re  # pour couper le texte en phrases
 import shutil  # pour copier les fichiers et trouver la commande npx
 import subprocess  # pour lancer HyperFrames
 import sys  # pour lire les numéros de scripts donnés au lancement
@@ -37,6 +39,35 @@ def est_mot_cle(mot, debut_de_phrase, emojis):
     """Un mot-clé : un nom propre au milieu d'une phrase (OpenAI, GPT), un nombre, ou un mot qui a un emoji."""
     nom_propre = mot[:1].isupper() and not debut_de_phrase and len(mot) > 2
     return nom_propre or any(c.isdigit() for c in mot) or sans_accent(mot) in emojis
+
+
+def texte_accroche(accroche, texte, mots_max):
+    """Le titre choc du début : l'accroche écrite par /scripts, sinon la 1re phrase du script, raccourcie."""
+    if accroche:
+        return accroche
+    phrase = re.split(r"(?<=[.!?…])\s", base.retirer_balises(texte).strip())[0].rstrip(".")
+    mots = phrase.split()
+    return " ".join(mots) if len(mots) <= mots_max else " ".join(mots[:mots_max]) + "…"
+
+
+def est_sensible(texte, mots_sensibles):
+    """Vrai si le script parle d'un sujet grave (justice, décès, santé...) : il faut alors un montage sobre."""
+    mots = {sans_accent(m) for m in base.retirer_balises(texte).split()}
+    return any(sans_accent(m) in mots for m in mots_sensibles)
+
+
+def adapter_au_sujet(r, sensible):
+    """Pour un sujet grave : pas d'emojis, pas de secousse, badge neutre et seulement les sons discrets."""
+    if not sensible:
+        return r
+    sobre = r["sujets_sensibles"]
+    r = copy.deepcopy(r)
+    r["emojis"]["actifs"] = False
+    r["accroche"]["secousse"] = False
+    r["accroche"]["badge"] = sobre["badge"]
+    r["accroche"]["couleur_badge"] = sobre["couleur_badge"]
+    r["sons"] = {nom: (volume if nom in sobre["sons_gardes"] else 0) for nom, volume in r["sons"].items()}
+    return r
 
 
 def former_groupes(mots, mots_max, pause_max):
@@ -187,7 +218,7 @@ html,body{{width:1080px;height:1920px;overflow:hidden;background:#0d0d17}}
 """
 
 
-def preparer_projet(script_id, angle, audio, duree, visuels, r):
+def preparer_projet(script_id, titre, audio, duree, visuels, r):
     """Écrit le dossier HyperFrames d'un script : la page index.html et ses fichiers (voix, photos, sons, police)."""
     dossier = DOSSIER_PROJETS / f"script_{script_id}"
     (dossier / "assets").mkdir(parents=True, exist_ok=True)
@@ -204,7 +235,8 @@ def preparer_projet(script_id, angle, audio, duree, visuels, r):
     photos, anim_photos, sons_photos = partie_photos(len(images), fin_video, r)
     textes, anim_textes, sons_textes = partie_sous_titres(mots, fin_video, r)
     anim_habillage, sons_habillage = partie_habillage(fin_video, r)
-    sons = sons_habillage + sons_photos + sons_textes
+    # Un son à volume 0 (coupé pour un sujet sensible) n'est pas ajouté
+    sons = [(nom, moment) for nom, moment in sons_habillage + sons_photos + sons_textes if r["sons"][nom] > 0]
     balises_sons = "".join(
         f'<audio id="son{i}" src="assets/{nom}.wav" data-start="{max(0, moment):.2f}" '
         f'data-duration="1.3" data-volume="{r["sons"][nom]}"></audio>'
@@ -220,7 +252,7 @@ def preparer_projet(script_id, angle, audio, duree, visuels, r):
 <div id="scene">{"".join(photos)}<div id="voile"></div></div>
 {"".join(textes)}
 <div id="badge">{html.escape(r["accroche"]["badge"])}</div>
-<div id="accroche">{html.escape(angle.upper())}</div>
+<div id="accroche">{html.escape(titre.upper())}</div>
 <div id="cta">{html.escape(r["fin"]["texte"])}</div>
 <div id="flash"></div>
 <div id="barre"></div>
@@ -274,18 +306,22 @@ def main():
         if not infos or not infos[1] or not json.loads(infos[3] or "[]"):
             print(f"Script {script_id} : il manque la voix ou les photos, montage impossible.")
             continue
-        angle, audio, duree, visuels = infos
-        dossier, nb_sons = preparer_projet(script_id, angle, audio, duree, visuels, reglages)
+        angle, audio, duree, visuels, accroche, texte = infos
+        sensible = est_sensible(texte, reglages["sujets_sensibles"]["mots"])
+        r = adapter_au_sujet(reglages, sensible)
+        titre = texte_accroche(accroche, texte, r["accroche"]["mots_max"])
+        dossier, nb_sons = preparer_projet(script_id, titre, audio, duree, visuels, r)
         sortie = DOSSIER_VIDEOS / f"script_{script_id}.mp4"
         if sortie.exists():  # on garde la version d'avant pour comparer après un retour
             sortie.replace(DOSSIER_VIDEOS / f"script_{script_id}_avant.mp4")
-        print(f"Script {script_id} : montage HyperFrames de {duree:.0f} s avec {nb_sons} effets sonores "
+        print(f"Script {script_id} : montage HyperFrames de {duree:.0f} s avec {nb_sons} effets sonores"
+              f"{' (sujet sensible : montage sobre)' if sensible else ''}, accroche « {titre} » "
               f"(environ 4 minutes sur ce PC)...")
-        resultat = rendre(dossier, sortie, reglages)
+        resultat = rendre(dossier, sortie, r)
         if resultat.returncode != 0 or not sortie.exists():
             print(f"   Échec du montage : {(resultat.stderr or resultat.stdout).strip()[-400:]}")
             continue
-        normaliser_son(sortie, reglages)
+        normaliser_son(sortie, r)
         base.enregistrer_video(script_id, f"data/videos/{sortie.name}")
         print(f"   Vidéo prête : data/videos/{sortie.name}")
 

@@ -80,6 +80,7 @@ def creer_base():
     ajouter_colonne(connexion, "video", "TEXT", table="scripts")
     ajouter_colonne(connexion, "controle", "TEXT", table="scripts")  # ok, a_revoir ou bloquant
     ajouter_colonne(connexion, "problemes", "TEXT", table="scripts")  # la liste des problèmes, au format JSON
+    ajouter_colonne(connexion, "accroche", "TEXT", table="scripts")  # le titre choc affiché au début (3 à 6 mots)
 
     # Table des retours : ce que je dis après chaque montage, et ce que le studio a changé pour s'améliorer
     connexion.execute("""
@@ -250,9 +251,9 @@ def enregistrer_scripts(scripts):
     connexion = connecter()
     for script in scripts:
         connexion.execute(
-            "INSERT INTO scripts (news_id, numero, angle, style, texte, images, mots, ecrit_le) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (script["news_id"], script["numero"], script["angle"], script["style"],
+            "INSERT INTO scripts (news_id, numero, angle, accroche, style, texte, images, mots, ecrit_le) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (script["news_id"], script["numero"], script["angle"], script.get("accroche"), script["style"],
              script["texte"], json.dumps(script["images"], ensure_ascii=False),
              len(retirer_balises(script["texte"]).split()), maintenant()),
         )
@@ -355,13 +356,21 @@ def scripts_du_matin(nombre):
 
 
 def infos_montage(script_id):
-    """Renvoie ce qu'il faut pour monter un script : son angle, sa voix, sa durée et ses photos."""
+    """Renvoie ce qu'il faut pour monter un script : angle, voix, durée, photos, accroche et texte."""
     connexion = connecter()
     ligne = connexion.execute(
-        "SELECT angle, audio, duree, visuels FROM scripts WHERE id = ?", (script_id,)
+        "SELECT angle, audio, duree, visuels, accroche, texte FROM scripts WHERE id = ?", (script_id,)
     ).fetchone()
     connexion.close()
     return ligne
+
+
+def enregistrer_accroche(script_id, accroche):
+    """Range l'accroche (le titre choc du début) d'un script déjà écrit."""
+    connexion = connecter()
+    connexion.execute("UPDATE scripts SET accroche = ? WHERE id = ?", (accroche, script_id))
+    connexion.commit()
+    connexion.close()
 
 
 def enregistrer_retour(script_id, retour, changements):

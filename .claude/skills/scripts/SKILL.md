@@ -16,6 +16,7 @@ Suis ces étapes dans l'ordre, depuis la racine du projet.
 3. Règles d'écriture de chaque script :
    - **Durée** : entre 130 et 165 mots, soit 45 à 60 secondes lus par la voix Edge TTS.
    - **Accroche** : la première phrase doit donner envie de rester, en moins de 3 secondes.
+   - **Titre d'accroche** (champ `accroche`) : 3 à 6 mots affichés en gros pendant les 2 premières secondes. Un fait choc ou une promesse, jamais le nom de l'angle. Exemple : « Google crée des mondes virtuels » plutôt que « L'annonce de Genie 4 ». Pour un sujet sensible, factuel et sans point d'exclamation.
    - **Fin** : une phrase de conclusion ou une question au public.
    - **Langue** : phrases courtes, écrites pour être dites. Écris les nombres et les sigles comme on les prononce (« GPT quatre o », « deux minutes »).
    - **Faits** : utilise seulement ce qui est dans le titre, le résumé et le champ `verification`. N'invente aucun chiffre ni aucune citation. Si la vérification émet une réserve (par exemple « en cours d'examen »), dis-la clairement dans le script.
@@ -29,7 +30,7 @@ Suis ces étapes dans l'ordre, depuis la racine du projet.
    Utilise les 2 styles pour chaque news (par exemple n°1 en dynamique, n°2 en explicatif). Pour un sujet sensible, choisis seulement `explicatif`.
 5. Pour chaque script, propose **3 à 5 idées d'images**, dans l'ordre du texte. Chaque idée commence par 2 à 4 mots-clés de recherche **en anglais** pour la banque de photos Pixabay, puis « : », puis la description en français. Exemple : `robot hand computer mouse : Main de robot qui tient une souris`. Les mots-clés décrivent une photo réelle qui existe probablement (objets, lieux, gestes), jamais un logo ni une personne célèbre.
 6. Écris tous les scripts dans `data/scripts.json`, avec exactement ce format (une entrée par script) :
-   `[{"news_id": 327, "numero": 1, "angle": "L'annonce de Genie 4", "style": "dynamique", "texte": "[excited] Google vient de créer... [curious] Mais ...", "images": ["...", "..."]}]`
+   `[{"news_id": 327, "numero": 1, "angle": "L'annonce de Genie 4", "accroche": "Google crée des mondes virtuels", "style": "dynamique", "texte": "[excited] Google vient de créer... [curious] Mais ...", "images": ["...", "..."]}]`
 7. Enregistre-les : `.venv/Scripts/python veille/enregistrer_scripts.py`
    Le script affiche la durée estimée de chaque texte. Si un texte est marqué « hors de 45 à 60 s », dis-le-moi.
 8. Montre-moi le résultat : pour chaque news, son titre puis ses 3 scripts (angle, style, durée estimée, texte complet et idées d'images). Rappelle les étapes suivantes : la voix (`.venv/Scripts/python veille/voix.py`), les photos (`.venv/Scripts/python veille/visuels.py`), puis le projet CapCut (`.venv/Scripts/python veille/capcut.py`).

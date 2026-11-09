@@ -54,7 +54,15 @@
     "couleur_badge": "#FF2E3E",
     "taille_titre": 76,
     "duree": 2.4,
-    "secousse": true
+    "secousse": true,
+    "mots_max": 7
+  },
+
+  "sujets_sensibles": {
+    "mots": ["mort", "morte", "deces", "decede", "suicide", "justice", "plainte", "proces", "tribunal", "victime", "victimes", "guerre", "attentat", "accident", "maladie", "medicament", "medicaments", "cancer"],
+    "badge": "📰 ACTU IA",
+    "couleur_badge": "#3A3F4B",
+    "sons_gardes": ["whoosh"]
   },
 
   "fin": {
