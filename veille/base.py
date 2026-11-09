@@ -78,6 +78,8 @@ def creer_base():
     ajouter_colonne(connexion, "capcut", "TEXT", table="scripts")
     ajouter_colonne(connexion, "visuels", "TEXT", table="scripts")
     ajouter_colonne(connexion, "video", "TEXT", table="scripts")
+    ajouter_colonne(connexion, "controle", "TEXT", table="scripts")  # ok, a_revoir ou bloquant
+    ajouter_colonne(connexion, "problemes", "TEXT", table="scripts")  # la liste des problèmes, au format JSON
 
     # Table des retours : ce que je dis après chaque montage, et ce que le studio a changé pour s'améliorer
     connexion.execute("""
@@ -366,10 +368,33 @@ def derniers_retours(nombre=10):
     return lignes
 
 
-def enregistrer_video(script_id, video):
-    """Range le chemin de la vidéo finale d'un script."""
+def scripts_a_controler(numeros=None):
+    """Renvoie les vidéos à contrôler : celles demandées, sinon celles pas encore contrôlées."""
     connexion = connecter()
-    connexion.execute("UPDATE scripts SET video = ? WHERE id = ?", (video, script_id))
+    requete = "SELECT id, video, duree, visuels, audio FROM scripts WHERE video IS NOT NULL"
+    if numeros:
+        requete += f" AND id IN ({','.join('?' * len(numeros))})"
+    else:
+        requete += " AND controle IS NULL"
+    lignes = connexion.execute(requete + " ORDER BY id", numeros or []).fetchall()
+    connexion.close()
+    return lignes
+
+
+def enregistrer_controle(script_id, verdict, problemes):
+    """Range le verdict du contrôle qualité d'une vidéo et la liste de ses problèmes."""
+    connexion = connecter()
+    connexion.execute("UPDATE scripts SET controle = ?, problemes = ? WHERE id = ?",
+                      (verdict, json.dumps(problemes, ensure_ascii=False), script_id))
+    connexion.commit()
+    connexion.close()
+
+
+def enregistrer_video(script_id, video):
+    """Range le chemin de la vidéo finale d'un script (une nouvelle vidéo doit être recontrôlée)."""
+    connexion = connecter()
+    connexion.execute("UPDATE scripts SET video = ?, controle = NULL, problemes = NULL WHERE id = ?",
+                      (video, script_id))
     connexion.commit()
     connexion.close()
 

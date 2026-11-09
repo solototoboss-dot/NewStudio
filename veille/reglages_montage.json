@@ -77,6 +77,7 @@
 
   "rendu": {
     "qualite_crf": 20,
+    "volume_cible_lufs": -14,
     "processus_paralleles": 2
   }
 }

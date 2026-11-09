@@ -248,6 +248,16 @@ def rendre(dossier, sortie, r):
     return subprocess.run(commande, capture_output=True, text=True, encoding="utf-8", errors="replace")
 
 
+def normaliser_son(sortie, r):
+    """Met le son au volume des réseaux (-14 LUFS) sans toucher à l'image, qui est juste recopiée."""
+    temporaire = sortie.with_name(sortie.stem + "_son.mp4")
+    commande = ["ffmpeg", "-y", "-v", "error", "-i", str(sortie), "-c:v", "copy",
+                "-af", f"loudnorm=I={r['rendu']['volume_cible_lufs']}:TP=-1.5:LRA=11",
+                "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", str(temporaire)]
+    if subprocess.run(commande).returncode == 0:
+        temporaire.replace(sortie)
+
+
 def main():
     base.creer_base()
     DOSSIER_VIDEOS.mkdir(parents=True, exist_ok=True)
@@ -275,6 +285,7 @@ def main():
         if resultat.returncode != 0 or not sortie.exists():
             print(f"   Échec du montage : {(resultat.stderr or resultat.stdout).strip()[-400:]}")
             continue
+        normaliser_son(sortie, reglages)
         base.enregistrer_video(script_id, f"data/videos/{sortie.name}")
         print(f"   Vidéo prête : data/videos/{sortie.name}")
 
